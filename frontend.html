@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fitness Tracker Frontend</title>
+</head>
+<body>
+    <h1>Fitness Tracker Frontend</h1>
+
+    <section>
+        <h2>Get User by ID</h2>
+        <input type="number" id="userIdInput" placeholder="Enter User ID" />
+        <button onclick="getUser()">Get User</button>
+        <div id="userResult"></div>
+    </section>
+
+    <section>
+        <h2>Add New User</h2>
+        <form id="addUserForm" onsubmit="addUser(event)">
+            <label>
+                Name: <input type="text" name="name" required />
+            </label><br />
+            <label>
+                Goals: <input type="text" name="goals" required />
+            </label><br />
+            <label>
+                Workout Level: <input type="text" name="workoutlevel" required />
+            </label><br />
+            <label>
+                Gender: <input type="text" name="gender" required />
+            </label><br />
+            <label>
+                Birthdate: <input type="date" name="birthdate" required />
+            </label><br />
+            <label>
+                Height: <input type="number" name="height" step="0.01" required />
+            </label><br />
+            <label>
+                Weight: <input type="number" name="weight" step="0.01" required />
+            </label><br />
+            <button type="submit">Add User</button>
+        </form>
+        <pre id="addUserResult"></pre>
+    </section>
+
+    <script>
+        const backendUrl = 'http://localhost:4000';
+
+        async function getUser() {
+            const userId = document.getElementById('userIdInput').value;
+        const resultEl = document.getElementById('userResult');
+        if (!userId) {
+            resultEl.textContent = 'Please enter a user ID.';
+            return;
+        }
+        try {
+            const response = await fetch(`${backendUrl}/user/${userId}`);
+            if (response.ok) {
+                const data = await response.json();
+                // Create table to display user data
+                let table = '<table border="1" cellpadding="5" cellspacing="0"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>';
+                for (const key in data) {
+                    table += `<tr><td>${key}</td><td>${data[key]}</td></tr>`;
+                }
+                table += '</tbody></table>';
+                resultEl.innerHTML = table;
+            } else {
+                const error = await response.json();
+                resultEl.textContent = `Error: ${error.message || response.statusText}`;
+            }
+        } catch (err) {
+            resultEl.textContent = 'Error fetching user: ' + err.message;
+        }
+        }
+
+        async function addUser(event) {
+            event.preventDefault();
+            const form = event.target;
+            const resultEl = document.getElementById('addUserResult');
+            const formData = new FormData(form);
+            try {
+                const response = await fetch(`${backendUrl}/user/add`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    resultEl.textContent = `Success: ${data.message}`;
+                    form.reset();
+                } else {
+                    const error = await response.json();
+                    resultEl.textContent = `Error: ${error.message || response.statusText}`;
+                }
+            } catch (err) {
+                resultEl.textContent = 'Error adding user: ' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
